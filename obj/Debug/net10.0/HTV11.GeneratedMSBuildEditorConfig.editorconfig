@@ -59,6 +59,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ob3RGb3VuZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Pages/Onboarding.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9PbmJvYXJkaW5nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Pages/Signup.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9TaWdudXAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
