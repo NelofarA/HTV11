@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "zq7rYtGhj24=",
+  "success": true,
+  "projectFilePath": "/Users/nelofarwahid/Desktop/HTV11/HTV11/HTV11.csproj",
+  "expectedPackageFiles": [
+    "/Users/nelofarwahid/.nuget/packages/microsoft.aspnetcore.app.internal.assets/10.0.12/microsoft.aspnetcore.app.internal.assets.10.0.12.nupkg.sha512"
+  ],
+  "logs": []
+}
