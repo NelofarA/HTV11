@@ -1,0 +1,31 @@
+@inject Supabase.Client SupabaseClient
+@inject NavigationManager Navigation
+
+@if (canAccessRoute)
+{
+    <RouteView RouteData="RouteData" DefaultLayout="DefaultLayout" />
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public RouteData RouteData { get; set; } = default!;
+
+    [Parameter]
+    public Type? DefaultLayout { get; set; }
+
+    private bool canAccessRoute;
+
+    protected override void OnParametersSet()
+    {
+        var isPublicPage =
+            RouteData.PageType == typeof(HTV11.Components.Pages.Login) ||
+            RouteData.PageType == typeof(HTV11.Components.Pages.Signup);
+
+        canAccessRoute = isPublicPage || SupabaseClient.Auth.CurrentSession is not null;
+
+        if (!canAccessRoute)
+        {
+            Navigation.NavigateTo("/", replace: true);
+        }
+    }
+}

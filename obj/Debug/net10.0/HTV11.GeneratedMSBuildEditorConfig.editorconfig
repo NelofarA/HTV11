@@ -1,15 +1,23 @@
 is_global = true
 build_property.TargetFramework = net10.0
-build_property.TargetFrameworkIdentifier = .NETCoreApp
-build_property.TargetFrameworkVersion = v10.0
+build_property.TargetFramework = net10.0
+build_property.TargetPlatformMinVersion = 
 build_property.TargetPlatformMinVersion = 
 build_property.UsingMicrosoftNETSdkWeb = true
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
 build_property.ProjectTypeGuids = 
 build_property.InvariantGlobalization = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
 build_property.PlatformNeutralAssembly = 
 build_property.EnforceExtendedAnalyzerRules = 
-build_property.EntryPointFilePath = 
+build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v10.0
+build_property.EntryPointFilePath = 
 build_property.RootNamespace = HTV11
 build_property.RootNamespace = HTV11
 build_property.ProjectDir = /Users/nelofarwahid/Desktop/HTV11/HTV11/
@@ -27,8 +35,12 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Pages/Counter.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Db3VudGVyLnJhem9y
+[/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/AuthRouteView.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BdXRoUm91dGVWaWV3LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Layout/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTWFpbkxheW91dC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Pages/Error.razor]
@@ -39,12 +51,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ib21lLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Mb2dpbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Pages/NotFound.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ob3RGb3VuZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Pages/Weather.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9XZWF0aGVyLnJhem9y
+[/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Pages/Signup.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9TaWdudXAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Routes.razor]
@@ -54,14 +70,6 @@ build_metadata.AdditionalFiles.CssScope =
 [/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9fSW1wb3J0cy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
-
-[/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Layout/MainLayout.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTWFpbkxheW91dC5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = b-lqiotfmta6
-
-[/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Layout/NavMenu.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvTmF2TWVudS5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = b-g57yke11rq
 
 [/Users/nelofarwahid/Desktop/HTV11/HTV11/Components/Layout/ReconnectModal.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYXlvdXQvUmVjb25uZWN0TW9kYWwucmF6b3I=

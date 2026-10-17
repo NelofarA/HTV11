@@ -1,0 +1,76 @@
+
+@page "/signup"
+@inject Supabase.Client SupabaseClient
+@inject NavigationManager Navigation
+@inject HTV11.Data.AppDbContext Db
+
+<div class="login-page">
+    <div class="login-card">
+        <h1>Create your account</h1>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <input @bind="email"
+               type="email"
+               placeholder="Email"
+               class="form-control mb-3" />
+
+        <input @bind="password"
+               type="password"
+               placeholder="Password"
+               class="form-control mb-3" />
+
+        <button class="btn btn-primary" @onclick="HandleSignUp">
+            Register
+        </button>
+
+        <p class="mt-3 mb-0">
+            Already have an account? <a href="/login">Sign in</a>
+        </p>
+    </div>
+</div>
+
+@code {
+    private string email = "";
+    private string password = "";
+    private string? errorMessage;
+
+    private async Task HandleSignUp()
+    {
+        errorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(email) ||
+            string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "Email and password are required.";
+            return;
+        }
+
+        try
+        {
+            var result = await SupabaseClient.Auth.SignUp(email, password);
+
+            if (result?.User is null)
+            {
+                errorMessage = "Signup did not return a user.";
+                return;
+            }
+
+            Db.Users.Add(new HTV11.Models.User
+            {
+                Email = email,
+                Name = email
+            });
+            await Db.SaveChangesAsync();
+
+            Navigation.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}
