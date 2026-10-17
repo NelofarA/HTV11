@@ -51,6 +51,14 @@
               "target": "Package",
               "version": "[10.0.12, )",
               "autoReferenced": true
+            },
+            "Supabase": {
+              "target": "Package",
+              "version": "[8.4.0, )"
+            },
+            "Supabase.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[8.4.0, )"
             }
           },
           "imports": [
