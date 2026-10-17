@@ -1,6 +1,4 @@
 using HTV11.Components;
-using HTV11.Data;
-using Microsoft.EntityFrameworkCore;
 using Supabase.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,8 +7,6 @@ builder.Services.AddSupabase(
     builder.Configuration["Supabase:Url"]!,
     builder.Configuration["Supabase:Key"]!
 );
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

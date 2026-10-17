@@ -2,7 +2,6 @@
 @page "/signup"
 @inject Supabase.Client SupabaseClient
 @inject NavigationManager Navigation
-@inject HTV11.Data.AppDbContext Db
 
 <div class="login-page">
     <div class="login-card">
@@ -12,6 +11,11 @@
         {
             <div class="alert alert-danger">@errorMessage</div>
         }
+
+        <input @bind="name"
+               type="text"
+               placeholder="Name"
+               class="form-control mb-3" />
 
         <input @bind="email"
                type="email"
@@ -34,24 +38,35 @@
 </div>
 
 @code {
+    private string name = "";
     private string email = "";
     private string password = "";
     private string? errorMessage;
-
     private async Task HandleSignUp()
     {
         errorMessage = null;
 
-        if (string.IsNullOrWhiteSpace(email) ||
+        if (string.IsNullOrWhiteSpace(name) ||
+            string.IsNullOrWhiteSpace(email) ||
             string.IsNullOrWhiteSpace(password))
         {
-            errorMessage = "Email and password are required.";
+            errorMessage = "Name, email, and password are required.";
             return;
         }
 
         try
         {
-            var result = await SupabaseClient.Auth.SignUp(email, password);
+            var result = await SupabaseClient.Auth.SignUp(
+                email,
+                password,
+                new Supabase.Gotrue.SignUpOptions
+                {
+                    Data = new Dictionary<string, object>
+                    {
+                        ["name"] = name.Trim(),
+                        ["onboarding_completed"] = true
+                    }
+                });
 
             if (result?.User is null)
             {
@@ -59,14 +74,20 @@
                 return;
             }
 
-            Db.Users.Add(new HTV11.Models.User
+            if (SupabaseClient.Auth.CurrentSession is not null)
             {
-                Email = email,
-                Name = email
-            });
-            await Db.SaveChangesAsync();
+                await SupabaseClient.Auth.Update(new Supabase.Gotrue.UserAttributes
+                {
+                    Data = new Dictionary<string, object>
+                    {
+                        ["name"] = name.Trim(),
+                        ["onboarding_completed"] = true
+                    }
+                });
+            }
 
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo(
+                SupabaseClient.Auth.CurrentSession is null ? "/login" : "/onboarding");
         }
         catch (Exception ex)
         {
