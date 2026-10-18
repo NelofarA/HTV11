@@ -378,9 +378,9 @@ button, input, select, textarea {
     max-width: 900px;
     margin: 1.5rem 0 2rem;
     color: #fff1e8;
-    font-size: clamp(2.5rem, 7vw, 5rem);
+    font-size: clamp(2rem, 6.5vw, 4.5rem);
     font-weight: 800;
-    letter-spacing: -.04em;
+    letter-spacing: -.041em;
     line-height: 1.05;
     text-wrap: balance;
 }
@@ -402,6 +402,14 @@ button, input, select, textarea {
 .discover-notice .preferences-save {
     display: inline-block;
     text-decoration: none;
+}
+
+.discover-intro {
+    max-width: 680px;
+    margin: -1rem 0 1.5rem;
+    color: #e1dada;
+    font-size: 1.05rem;
+    line-height: 1.6;
 }
 
 .discover-recommendations {
@@ -473,6 +481,243 @@ button, input, select, textarea {
     color: #a5d3c3;
 }
 
+.discover-recommendation-actions {
+    margin-top: 1rem;
+}
+
+.discover-recommendation-actions .preferences-save:disabled {
+    opacity: .75;
+    cursor: default;
+}
+
+.planned-day {
+    max-width: 850px;
+    margin-top: 2rem;
+}
+
+.planned-day-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.planned-day-heading h2 {
+    margin: 0;
+    color: #fff1e8;
+    font-size: 1.6rem;
+}
+
+.planned-day-heading p {
+    margin: .25rem 0 0;
+    color: #c8c2c2;
+}
+
+.planned-day-add {
+    flex: 0 0 auto;
+    text-decoration: none;
+}
+
+.planned-day-empty,
+.planned-place {
+    padding: 1.25rem;
+    border: 1px solid rgba(242, 139, 101, .24);
+    border-radius: 10px;
+    background: rgba(23, 16, 13, .82);
+}
+
+.planned-day-empty h3,
+.planned-place h3 {
+    margin: 0;
+    color: #fff1e8;
+    font-size: 1.15rem;
+}
+
+.planned-day-empty p,
+.planned-place p {
+    margin: .6rem 0 0;
+    color: #e1dada;
+    line-height: 1.5;
+}
+
+.planned-place-list {
+    display: grid;
+    gap: .85rem;
+}
+
+.planned-place {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    border-left: 3px solid #f28b65;
+}
+
+.planned-place-neighborhood,
+.planned-place .planned-place-interests {
+    color: #c8c2c2;
+    font-size: .9rem;
+}
+
+.planned-place strong {
+    color: #f2a184;
+}
+
+.planned-place-remove {
+    flex: 0 0 auto;
+    padding: .5rem .75rem;
+    border: 1px solid rgba(242, 139, 101, .4);
+    border-radius: 6px;
+    background: transparent;
+    color: #f2a184;
+    cursor: pointer;
+}
+
+.planned-place-remove:hover:not(:disabled) {
+    background: rgba(242, 139, 101, .12);
+}
+
+.planned-place-remove:disabled {
+    opacity: .65;
+    cursor: default;
+}
+
+.sidequest-intro {
+    max-width: 640px;
+    margin: -1rem 0 1.5rem;
+    color: #e1dada;
+    font-size: 1.05rem;
+}
+
+.sidequest-plan-context {
+    max-width: 850px;
+    margin: 0 0 1rem;
+    padding: .85rem 1rem;
+    border: 1px solid rgba(131, 185, 168, .24);
+    border-radius: 8px;
+    background: rgba(131, 185, 168, .08);
+    color: #e1dada;
+}
+
+.sidequest-plan-context strong {
+    color: #a5d3c3;
+}
+
+.sidequest-list {
+    display: grid;
+    gap: 1rem;
+    max-width: 850px;
+    margin-top: 1.5rem;
+}
+
+.sidequest-card {
+    padding: 1.25rem;
+    border: 1px solid rgba(242, 139, 101, .24);
+    border-left: 3px solid #83b9a8;
+    border-radius: 10px;
+    background: rgba(23, 16, 13, .82);
+}
+
+.sidequest-card-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.sidequest-card h2 {
+    margin: 0;
+    color: #fff1e8;
+    font-size: 1.25rem;
+}
+
+.sidequest-card p {
+    margin: .7rem 0 0;
+    color: #e1dada;
+    line-height: 1.55;
+}
+
+.sidequest-card .sidequest-location {
+    margin: 0 0 .25rem;
+    color: #a5d3c3;
+    font-size: .9rem;
+}
+
+.sidequest-duration {
+    flex: 0 0 auto;
+    padding: .3rem .55rem;
+    border-radius: 999px;
+    background: rgba(242, 139, 101, .12);
+    color: #f2a184;
+    font-size: .85rem;
+    white-space: nowrap;
+}
+
+.sidequest-card .sidequest-creator-prompt {
+    padding: .7rem .85rem;
+    border-radius: 6px;
+    background: rgba(131, 185, 168, .1);
+}
+
+.sidequest-creator-prompt strong {
+    color: #a5d3c3;
+}
+
+.sidequest-tiktok-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-top: .85rem;
+    color: #f2a184;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.sidequest-tiktok-link:hover {
+    color: #ffc0a4;
+}
+
+.sidequest-card .sidequest-search-note {
+    margin-top: .35rem;
+    color: #aaa1a0;
+    font-size: .85rem;
+}
+
+.sidequest-add-button {
+    margin-top: .9rem;
+}
+
+.sidequest-add-button:disabled {
+    opacity: .75;
+    cursor: default;
+}
+
+.planned-sidequests {
+    margin-top: 2rem;
+}
+
+.planned-sidequests > h3 {
+    margin: 0 0 1rem;
+    color: #fff1e8;
+    font-size: 1.35rem;
+}
+
+.planned-sidequest {
+    border-left-color: #83b9a8;
+}
+
+.planned-sidequest .planned-place-neighborhood {
+    margin-top: 0;
+    margin-bottom: .25rem;
+    color: #a5d3c3;
+}
+
+.planned-sidequest .sidequest-tiktok-link {
+    margin-top: .6rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .discover-recommendation {
         transition: none;
@@ -487,6 +732,14 @@ button, input, select, textarea {
     .preferences-grid {
         grid-template-columns: 1fr;
     }
+
+    .planned-place {
+        flex-direction: column;
+    }
+
+    .sidequest-card-heading {
+        flex-direction: column;
+    }
 }
 
 .home-tiles {
@@ -494,6 +747,65 @@ button, input, select, textarea {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
     margin-top: 2rem;
+}
+
+.home-hero {
+    max-width: 820px;
+}
+
+.home-eyebrow {
+    margin: 0 0 .75rem;
+    color: #a5d3c3;
+    font-size: .9rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.home-hero .feature-hero-title {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.home-intro {
+    max-width: 700px;
+    color: #e1dada;
+    font-size: 1.1rem;
+    line-height: 1.65;
+}
+
+.home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .75rem;
+    margin-top: 1.5rem;
+}
+
+.home-actions .preferences-save,
+.home-secondary-action {
+    display: inline-block;
+    padding: .75rem 1.1rem;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.home-secondary-action {
+    border: 1px solid rgba(255, 255, 255, .24);
+    color: #fff1e8;
+}
+
+.home-secondary-action:hover {
+    background: rgba(255, 255, 255, .08);
+    color: #fff1e8;
+}
+
+.home-guide {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    max-width: 1100px;
+    margin-top: 3rem;
 }
 
 .home-tile {
@@ -506,12 +818,55 @@ button, input, select, textarea {
 }
 
 .home-tile h2 {
+    margin: .65rem 0 .6rem;
     font-size: 1.25rem;
+    color: #fff1e8;
 }
 
 .home-tile p {
-    margin: 0;
+    margin: 0 0 1rem;
     color: rgba(255, 255, 255, .75);
+    line-height: 1.55;
+}
+
+.home-tile a {
+    color: #f2a184;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.home-tile a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.home-step {
+    color: #a5d3c3;
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.home-note {
+    max-width: 1100px;
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    border-left: 3px solid #f28b65;
+    border-radius: 8px;
+    background: rgba(23, 16, 13, .72);
+}
+
+.home-note h2 {
+    margin: 0 0 .4rem;
+    color: #fff1e8;
+    font-size: 1.1rem;
+}
+
+.home-note p {
+    margin: 0;
+    color: #c8c2c2;
+    line-height: 1.5;
 }
 
 a, .btn-link {

@@ -63,8 +63,7 @@
                 {
                     Data = new Dictionary<string, object>
                     {
-                        ["name"] = name.Trim(),
-                        ["onboarding_completed"] = true
+                        ["name"] = name.Trim()
                     }
                 });
 
@@ -80,14 +79,13 @@
                 {
                     Data = new Dictionary<string, object>
                     {
-                        ["name"] = name.Trim(),
-                        ["onboarding_completed"] = true
+                        ["name"] = name.Trim()
                     }
                 });
             }
 
             Navigation.NavigateTo(
-                SupabaseClient.Auth.CurrentSession is null ? "/login" : "/onboarding");
+                SupabaseClient.Auth.CurrentSession is null ? "/login" : "/home");
         }
         catch (Exception ex)
         {

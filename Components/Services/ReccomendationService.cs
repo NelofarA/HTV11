@@ -25,7 +25,16 @@ public sealed class AttractionRecommendationException(string message) : Exceptio
 		GeneratedAttraction Attraction,
 		int MatchScore);
 
-public sealed class AttractionRecommendationService(
+	public sealed record GeneratedSideQuest(
+	    string Title,
+	    string PlannedPlaceName,
+	    string Area,
+	    string Activity,
+	    string CreatorPrompt,
+	    string TikTokSearchTerms,
+	    int DurationMinutes);
+
+	public sealed class AttractionRecommendationService(
     HttpClient httpClient,
     IConfiguration configuration)
 {
@@ -153,6 +162,127 @@ public sealed class AttractionRecommendationService(
         return recommendations;
     }
 
+    public async Task<IReadOnlyList<GeneratedSideQuest>> GenerateSideQuestsAsync(
+        Preferences preferences,
+        IReadOnlyCollection<PlannedPlace> plannedPlaces,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(preferences);
+        ArgumentNullException.ThrowIfNull(plannedPlaces);
+
+        if (plannedPlaces.Count == 0)
+        {
+            return [];
+        }
+
+        var apiKey = configuration["Gemini:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            throw new AttractionRecommendationException(
+                "Gemini recommendations aren’t configured yet. From the project folder, run `dotnet user-secrets set \"Gemini:ApiKey\" \"YOUR_GEMINI_API_KEY\"`, or set the `Gemini__ApiKey` environment variable.");
+        }
+
+        var model = configuration["Gemini:Model"] ?? DefaultModel;
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"models/{Uri.EscapeDataString(model)}:generateContent");
+        request.Headers.Add("x-goog-api-key", apiKey);
+        request.Content = JsonContent.Create(new
+        {
+            systemInstruction = new
+            {
+                parts = new[]
+                {
+                    new
+                    {
+                        text = """
+                        You create safe, optional mini side quests for a visitor's Toronto day plan.
+                        Return valid JSON only, shaped as {"sideQuests":[...]}.
+                        Generate exactly eight distinct quests. Multiple quests may use the same planned place. Every quest must use a supplied planned place and its neighborhood as the setting. Focus on lesser-known, locally interesting details and activities; avoid obvious, heavily visited Toronto attractions and generic tourist activities. Do not invent other venues, facilities, events, local facts, or guaranteed access.
+                        Each activity must take 30 minutes or less, be easy to start and stop, and not require purchases, reservations, entering private areas, or approaching/filming strangers. Never require filming anyone without consent.
+                        Prefer playful, creator-friendly prompts that help someone notice or capture a niche visual, sound, detail, or personal reaction around the planned area. Make quests work even without recording. Keep the activity description concise: explain the activity and briefly why this small discovery is worth noticing.
+                        TikTok search terms are search phrases only, not URLs. Make them specific to the activity and Toronto area so the user can look for inspiration; don't claim search results are verified or accurate.
+                        Each item must include title, plannedPlaceName (exactly one input place name), area (the corresponding input neighborhood), activity (one concise sentence describing what to do and why it's worthwhile), creatorPrompt (a simple optional filming or storytelling prompt that avoids other people), tikTokSearchTerms (a concise phrase), and durationMinutes (integer from 5 to 30).
+                        Do not include markdown.
+                        """
+                    }
+                }
+            },
+            contents = new[]
+            {
+                new
+                {
+                    role = "user",
+                    parts = new[]
+                    {
+                        new
+                        {
+                            text = $"""
+                        Create optional side quests for these places already saved in the visitor's Plan My Day:
+                        {JsonSerializer.Serialize(plannedPlaces.Select(place => new { place.Name, place.Neighborhood }))}
+                        Visitor interests: {FormatList(preferences.Interests)}.
+                        Accessibility needs: {FormatList(preferences.AccessibilityNeeds)}.
+                        Age group: {preferences.AgeGroup ?? "not specified"}.
+                        Activity pace: {preferences.ActivityPace ?? "not specified"}.
+                        Preferred setting: {DescribeSettingPreference(preferences.SettingPreference)}.
+                        Keep all quests accessible as optional ideas, avoid claiming venue-specific details, and make the idea feel fun to share as a creator.
+                        """
+                        }
+                    }
+                }
+            },
+            generationConfig = new
+            {
+                temperature = 0.9,
+                responseMimeType = "application/json"
+            }
+        }, options: JsonOptions);
+
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw CreateApiException(response.StatusCode, model);
+        }
+
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+        var geminiResponse = JsonSerializer.Deserialize<GeneratedGeminiResponse>(responseBody, JsonOptions)
+            ?? throw new AttractionRecommendationException("Gemini returned an empty side quest response.");
+        var responseText = geminiResponse.Candidates
+            .SelectMany(candidate => candidate.Content?.Parts ?? [])
+            .Select(part => part.Text)
+            .FirstOrDefault(text => !string.IsNullOrWhiteSpace(text));
+
+        if (string.IsNullOrWhiteSpace(responseText))
+        {
+            throw new AttractionRecommendationException("Gemini did not return a valid side quest payload.");
+        }
+
+        var result = JsonSerializer.Deserialize<GeneratedSideQuestResponse>(responseText, JsonOptions)
+            ?? throw new AttractionRecommendationException("Gemini returned a malformed side quest payload.");
+        var placeNames = plannedPlaces
+            .Select(place => place.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var validQuests = result.SideQuests
+            .Where(quest => quest is not null
+                && placeNames.Contains(quest.PlannedPlaceName)
+                && quest.DurationMinutes is >= 5 and <= 30
+                && !string.IsNullOrWhiteSpace(quest.Title)
+                && !string.IsNullOrWhiteSpace(quest.Activity)
+                && !string.IsNullOrWhiteSpace(quest.TikTokSearchTerms))
+            .DistinctBy(quest => quest.Title.Trim(), StringComparer.OrdinalIgnoreCase)
+            .Take(8)
+            .ToArray();
+
+        if (validQuests.Length < 8)
+        {
+            throw new AttractionRecommendationException(
+                $"Gemini returned only {validQuests.Length} valid side quests; at least eight are needed. Please generate them again.");
+        }
+
+        return validQuests;
+    }
+
     private static AttractionRecommendationException CreateApiException(HttpStatusCode statusCode, string model) =>
         statusCode switch
         {
@@ -231,6 +361,11 @@ public sealed class AttractionRecommendationService(
     private sealed class GeneratedRecommendationResponse
     {
         public GeneratedAttraction[] Recommendations { get; init; } = [];
+    }
+
+    private sealed class GeneratedSideQuestResponse
+    {
+        public GeneratedSideQuest[] SideQuests { get; init; } = [];
     }
 
     private sealed class GeneratedGeminiResponse

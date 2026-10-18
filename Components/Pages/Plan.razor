@@ -16,12 +16,93 @@
     {
         <p class="discover-notice" role="alert">@errorMessage</p>
     }
-    else if (!hasCompletePreferences)
+    else
     {
-        <section class="discover-notice" role="status">
-            <h2>Complete your preferences first</h2>
-            <p>Choose your trip basics and at least one interest to plan a day that suits you.</p>
-            <a class="preferences-save" href="/preferences">Complete preferences</a>
+        @if (!hasCompletePreferences)
+        {
+            <section class="discover-notice" role="status">
+                <h2>Complete your preferences first</h2>
+                <p>Choose your trip basics and at least one interest to plan a day that suits you.</p>
+                <a class="preferences-save" href="/preferences">Complete preferences</a>
+            </section>
+        }
+
+        <section class="planned-day">
+            <div class="planned-day-heading">
+                <div>
+                    <h2>Your day plan</h2>
+                    <p>@plannedPlaces.Count @(plannedPlaces.Count == 1 ? "place" : "places") · @plannedSideQuests.Count @(plannedSideQuests.Count == 1 ? "side quest" : "side quests")</p>
+                </div>
+                <a class="preferences-save planned-day-add" href="/discover">Find places</a>
+            </div>
+
+            @if (plannedPlaces.Count == 0 && plannedSideQuests.Count == 0)
+            {
+                <div class="planned-day-empty">
+                    <h3>Your day is ready to take shape</h3>
+                    <p>Save places from Discover and add side quests to build your day. You can remove ideas anytime.</p>
+                    <a class="preferences-save planned-day-add" href="/sidequests">Explore side quests</a>
+                </div>
+            }
+            @if (plannedPlaces.Count > 0)
+            {
+                <div class="planned-place-list">
+                    @foreach (var place in plannedPlaces)
+                    {
+                        <article class="planned-place">
+                            <div>
+                                <h3>@place.Name</h3>
+                                <p class="planned-place-neighborhood">@place.Neighborhood</p>
+                                <p>@place.Summary</p>
+                                <p><strong>Why it may suit you:</strong> @place.WhyRecommended</p>
+                                <p><strong>Tip:</strong> @place.VisitorTips</p>
+                                @if (place.Interests.Count > 0)
+                                {
+                                    <p class="planned-place-interests">@string.Join(" · ", place.Interests)</p>
+                                }
+                            </div>
+                            <button type="button"
+                                    class="planned-place-remove"
+                                    @onclick="() => RemovePlace(place)"
+                                    disabled="@removingPlaceIds.Contains(place.Id)">
+                                @(removingPlaceIds.Contains(place.Id) ? "Removing..." : "Remove")
+                            </button>
+                        </article>
+                    }
+                </div>
+            }
+
+            @if (plannedSideQuests.Count > 0)
+            {
+                <section class="planned-sidequests" aria-label="Planned side quests">
+                    <h3>Your side quests</h3>
+                    <div class="planned-place-list">
+                        @foreach (var quest in plannedSideQuests)
+                        {
+                            <article class="planned-place planned-sidequest">
+                                <div>
+                                    <p class="planned-place-neighborhood">@quest.Area · Near @quest.PlannedPlaceName · @quest.DurationMinutes min</p>
+                                    <h3>@quest.Title</h3>
+                                    <p>@quest.Activity</p>
+                                    <p><strong>Creator idea:</strong> @quest.CreatorPrompt</p>
+                                    <a class="sidequest-tiktok-link"
+                                       href="@BuildTikTokSearchUrl(quest.TikTokSearchTerms)"
+                                       target="_blank"
+                                       rel="noopener noreferrer">
+                                        Search TikTok for inspiration <span aria-hidden="true">↗</span>
+                                    </a>
+                                </div>
+                                <button type="button"
+                                        class="planned-place-remove"
+                                        @onclick="() => RemoveSideQuest(quest)"
+                                        disabled="@removingSideQuestIds.Contains(quest.Id)">
+                                    @(removingSideQuestIds.Contains(quest.Id) ? "Removing..." : "Remove")
+                                </button>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
         </section>
     }
 </div>
@@ -30,6 +111,10 @@
     private bool isLoading = true;
     private bool hasCompletePreferences;
     private string? errorMessage;
+    private List<HTV11.Models.PlannedPlace> plannedPlaces = [];
+    private List<HTV11.Models.PlannedSideQuest> plannedSideQuests = [];
+    private readonly HashSet<Guid> removingPlaceIds = [];
+    private readonly HashSet<Guid> removingSideQuestIds = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,14 +141,87 @@
                 && !string.IsNullOrWhiteSpace(preferences.ActivityPace)
                 && !string.IsNullOrWhiteSpace(preferences.SettingPreference)
                 && preferences.Interests is { Count: > 0 };
+
+            var plannedPlacesResponse = await SupabaseClient
+                .From<HTV11.Models.PlannedPlace>()
+                .Where(row => row.UserId == userId)
+                .Get();
+            plannedPlaces = plannedPlacesResponse.Models
+                .OrderBy(place => place.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var plannedSideQuestsResponse = await SupabaseClient
+                .From<HTV11.Models.PlannedSideQuest>()
+                .Where(quest => quest.UserId == userId)
+                .Get();
+            plannedSideQuests = plannedSideQuestsResponse.Models.ToList();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            errorMessage = "Couldn't check your preferences. Please try again.";
+            errorMessage = $"Couldn't load your day plan. Confirm Supabase is available and run Supabase/planned_places.sql. ({ex.Message})";
         }
         finally
         {
             isLoading = false;
         }
     }
+
+    private async Task RemovePlace(HTV11.Models.PlannedPlace place)
+    {
+        if (!Guid.TryParse(SupabaseClient.Auth.CurrentUser?.Id, out var userId))
+        {
+            errorMessage = "Sign in to update your day plan.";
+            return;
+        }
+
+        removingPlaceIds.Add(place.Id);
+        errorMessage = null;
+        try
+        {
+            await SupabaseClient
+                .From<HTV11.Models.PlannedPlace>()
+                .Where(row => row.Id == place.Id && row.UserId == userId)
+                .Delete();
+            plannedPlaces.Remove(place);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Couldn't remove this place from your day plan: {ex.Message}";
+        }
+        finally
+        {
+            removingPlaceIds.Remove(place.Id);
+        }
+    }
+
+    private async Task RemoveSideQuest(HTV11.Models.PlannedSideQuest quest)
+    {
+        if (!Guid.TryParse(SupabaseClient.Auth.CurrentUser?.Id, out var userId))
+        {
+            errorMessage = "Sign in to update your day plan.";
+            return;
+        }
+
+        removingSideQuestIds.Add(quest.Id);
+        errorMessage = null;
+        try
+        {
+            await SupabaseClient
+                .From<HTV11.Models.PlannedSideQuest>()
+                .Where(row => row.Id == quest.Id && row.UserId == userId)
+                .Delete();
+            plannedSideQuests.Remove(quest);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Couldn't remove this side quest from your day plan: {ex.Message}";
+        }
+        finally
+        {
+            removingSideQuestIds.Remove(quest.Id);
+        }
+    }
+
+    private static string BuildTikTokSearchUrl(string searchTerms) =>
+        $"https://www.tiktok.com/search?q={Uri.EscapeDataString(searchTerms)}";
 }

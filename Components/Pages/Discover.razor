@@ -9,6 +9,10 @@
     <h1 class="feature-hero-title">
         Find Your <span>Next Adventure</span>
     </h1>
+    <p class="discover-intro">
+        Explore lesser-known Toronto spots picked around your interests—not just the usual tourist stops.
+        Generate a fresh set, then save the places you’d like to add to your day.
+    </p>
 
     @if (isLoading)
     {
@@ -57,6 +61,18 @@
                         <p class="discover-recommendation-callout discover-recommendation-tip">
                             <strong>Tip:</strong> @recommendation.Attraction.VisitorTips
                         </p>
+                        <div class="discover-recommendation-actions">
+                            <button type="button"
+                                    class="preferences-save"
+                                    @onclick="() => AddToDayPlan(recommendation.Attraction)"
+                                    disabled="@(!string.IsNullOrWhiteSpace(addingPlaceName))">
+                                @(IsPlanned(recommendation.Attraction.Name)
+                                    ? "Added to my day"
+                                    : addingPlaceName == recommendation.Attraction.Name
+                                        ? "Adding..."
+                                        : "Add to my day")
+                            </button>
+                        </div>
                     </article>
                 }
             </section>
@@ -69,7 +85,9 @@
     private bool hasCompletePreferences;
     private bool isGenerating;
     private string? errorMessage;
+    private string? addingPlaceName;
     private IReadOnlyList<AttractionRecommendation>? recommendations;
+    private readonly HashSet<string> plannedPlaceNames = new(StringComparer.OrdinalIgnoreCase);
     private HTV11.Models.Preferences? storedPreferences;
 
     protected override async Task OnInitializedAsync()
@@ -97,10 +115,16 @@
                 && !string.IsNullOrWhiteSpace(storedPreferences.ActivityPace)
                 && !string.IsNullOrWhiteSpace(storedPreferences.SettingPreference)
                 && storedPreferences.Interests is { Count: > 0 };
+
+            var plannedPlacesResponse = await SupabaseClient
+                .From<HTV11.Models.PlannedPlace>()
+                .Where(row => row.UserId == userId)
+                .Get();
+            plannedPlaceNames.UnionWith(plannedPlacesResponse.Models.Select(place => place.Name));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            errorMessage = "Couldn't check your preferences. Please try again.";
+            errorMessage = $"Couldn't load preferences or saved places. Confirm Supabase is available and run Supabase/planned_places.sql. ({ex.Message})";
         }
         finally
         {
@@ -126,6 +150,53 @@
         finally
         {
             isGenerating = false;
+        }
+    }
+
+    private bool IsPlanned(string name) => plannedPlaceNames.Contains(name);
+
+    private async Task AddToDayPlan(GeneratedAttraction attraction)
+    {
+        if (IsPlanned(attraction.Name))
+        {
+            return;
+        }
+
+        if (!Guid.TryParse(SupabaseClient.Auth.CurrentUser?.Id, out var userId))
+        {
+            errorMessage = "Sign in to add places to your day plan.";
+            return;
+        }
+
+        addingPlaceName = attraction.Name;
+        errorMessage = null;
+
+        try
+        {
+            await SupabaseClient.From<HTV11.Models.PlannedPlace>().Insert(new HTV11.Models.PlannedPlace
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Name = attraction.Name,
+                Neighborhood = attraction.Neighborhood,
+                Summary = attraction.Summary,
+                WhyRecommended = attraction.WhyRecommended,
+                Interests = attraction.Interests.ToList(),
+                AccessibilityNotes = attraction.AccessibilityNotes,
+                AgeNotes = attraction.AgeNotes,
+                TransitNotes = attraction.TransitNotes,
+                PotentialDrawbacks = attraction.PotentialDrawbacks,
+                VisitorTips = attraction.VisitorTips
+            });
+            plannedPlaceNames.Add(attraction.Name);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Couldn't add this place to your day plan: {ex.Message}";
+        }
+        finally
+        {
+            addingPlaceName = null;
         }
     }
 }

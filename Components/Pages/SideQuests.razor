@@ -1,5 +1,7 @@
 @page "/sidequests"
+@using HTV11.Components.Services
 @inject Supabase.Client SupabaseClient
+@inject AttractionRecommendationService AttractionRecommendationService
 
 <PageTitle>Side Quests</PageTitle>
 
@@ -7,29 +9,98 @@
     <h1 class="feature-hero-title">
         Take the <span>Scenic Route</span>
     </h1>
+    <p class="sidequest-intro">
+        Tiny, optional adventures inspired by the places in your day plan.
+    </p>
 
     @if (isLoading)
     {
-        <p>Checking your preferences…</p>
+        <p>Loading your day plan…</p>
     }
     else if (!string.IsNullOrEmpty(errorMessage))
     {
         <p class="discover-notice" role="alert">@errorMessage</p>
     }
-    else if (!hasCompletePreferences)
+    else if (plannedPlaces.Count == 0)
     {
         <section class="discover-notice" role="status">
-            <h2>Complete your preferences first</h2>
-            <p>Choose your trip basics and at least one interest to get personalized side quests.</p>
-            <a class="preferences-save" href="/preferences">Complete preferences</a>
+            <h2>Start with a place in your plan</h2>
+            <p>Add a place in Discover first, and side quests will be tailored to its area.</p>
+            <a class="preferences-save" href="/discover">Discover places</a>
         </section>
+    }
+    else
+    {
+        <section class="sidequest-plan-context">
+            <strong>Inspired by your plan:</strong>
+            @string.Join(" · ", plannedPlaces.Select(place => place.Name))
+        </section>
+
+        <button type="button"
+                class="preferences-save"
+                @onclick="GenerateSideQuests"
+                disabled="@isGenerating">
+            @(isGenerating ? "Creating side quests..." : "Generate side quests")
+        </button>
+
+        @if (sideQuests is not null)
+        {
+            @if (sideQuests.Count == 0)
+            {
+                <p class="discover-notice" role="status">No suitable side quests were returned. Try generating again.</p>
+            }
+            else
+            {
+                <section class="sidequest-list" aria-label="Side quests">
+                    @foreach (var quest in sideQuests)
+                    {
+                        <article class="sidequest-card">
+                            <div class="sidequest-card-heading">
+                                <div>
+                                    <p class="sidequest-location">@quest.Area · Near @quest.PlannedPlaceName</p>
+                                    <h2>@quest.Title</h2>
+                                </div>
+                                <span class="sidequest-duration">About @quest.DurationMinutes min</span>
+                            </div>
+                            <p>@quest.Activity</p>
+                            <p class="sidequest-creator-prompt"><strong>Creator idea:</strong> @quest.CreatorPrompt</p>
+                            <a class="sidequest-tiktok-link"
+                               href="@BuildTikTokSearchUrl(quest)"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                Search TikTok for inspiration
+                                <span aria-hidden="true">↗</span>
+                            </a>
+                            <p class="sidequest-search-note">
+                                Search: @quest.TikTokSearchTerms. Check results before relying on them.
+                            </p>
+                            <button type="button"
+                                    class="preferences-save sidequest-add-button"
+                                    @onclick="() => AddToDayPlan(quest)"
+                                    disabled="@(savedQuestTitles.Contains(quest.Title) || addingQuestTitle is not null)">
+                                @(savedQuestTitles.Contains(quest.Title)
+                                    ? "Added to my day"
+                                    : addingQuestTitle == quest.Title
+                                        ? "Adding..."
+                                        : "Add to my day")
+                            </button>
+                        </article>
+                    }
+                </section>
+            }
+        }
     }
 </div>
 
 @code {
     private bool isLoading = true;
-    private bool hasCompletePreferences;
+    private bool isGenerating;
     private string? errorMessage;
+    private string? addingQuestTitle;
+    private HTV11.Models.Preferences preferences = new();
+    private List<HTV11.Models.PlannedPlace> plannedPlaces = [];
+    private IReadOnlyList<GeneratedSideQuest>? sideQuests;
+    private readonly HashSet<string> savedQuestTitles = new(StringComparer.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync()
     {
@@ -42,28 +113,104 @@
 
         try
         {
-            var response = await SupabaseClient
+            var preferencesResponse = await SupabaseClient
                 .From<HTV11.Models.Preferences>()
                 .Where(row => row.Id == userId)
                 .Get();
+            preferences = preferencesResponse.Models.FirstOrDefault() ?? new HTV11.Models.Preferences();
 
-            var preferences = response.Models.FirstOrDefault();
-            hasCompletePreferences = preferences is not null
-                && !string.IsNullOrWhiteSpace(preferences.AgeGroup)
-                && !string.IsNullOrWhiteSpace(preferences.TravelMode)
-                && !string.IsNullOrWhiteSpace(preferences.VisitDuration)
-                && !string.IsNullOrWhiteSpace(preferences.BudgetPreference)
-                && !string.IsNullOrWhiteSpace(preferences.ActivityPace)
-                && !string.IsNullOrWhiteSpace(preferences.SettingPreference)
-                && preferences.Interests is { Count: > 0 };
+            var plannedPlacesResponse = await SupabaseClient
+                .From<HTV11.Models.PlannedPlace>()
+                .Where(row => row.UserId == userId)
+                .Get();
+            plannedPlaces = plannedPlacesResponse.Models
+                .OrderBy(place => place.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var savedQuestsResponse = await SupabaseClient
+                .From<HTV11.Models.PlannedSideQuest>()
+                .Where(quest => quest.UserId == userId)
+                .Get();
+            savedQuestTitles.UnionWith(savedQuestsResponse.Models.Select(quest => quest.Title));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            errorMessage = "Couldn't check your preferences. Please try again.";
+            errorMessage = $"Couldn't load your plan. Confirm Supabase/planned_places.sql and Supabase/planned_side_quests.sql have been run. ({ex.Message})";
         }
         finally
         {
             isLoading = false;
         }
     }
+
+    private async Task GenerateSideQuests()
+    {
+        if (plannedPlaces.Count == 0)
+        {
+            return;
+        }
+
+        isGenerating = true;
+        sideQuests = null;
+        errorMessage = null;
+
+        try
+        {
+            sideQuests = await AttractionRecommendationService.GenerateSideQuestsAsync(
+                preferences,
+                plannedPlaces);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isGenerating = false;
+        }
+    }
+
+    private async Task AddToDayPlan(GeneratedSideQuest quest)
+    {
+        if (savedQuestTitles.Contains(quest.Title))
+        {
+            return;
+        }
+
+        if (!Guid.TryParse(SupabaseClient.Auth.CurrentUser?.Id, out var userId))
+        {
+            errorMessage = "Sign in to add side quests to your day plan.";
+            return;
+        }
+
+        addingQuestTitle = quest.Title;
+        errorMessage = null;
+        try
+        {
+            await SupabaseClient.From<HTV11.Models.PlannedSideQuest>().Insert(new HTV11.Models.PlannedSideQuest
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Title = quest.Title,
+                PlannedPlaceName = quest.PlannedPlaceName,
+                Area = quest.Area,
+                Activity = quest.Activity,
+                CreatorPrompt = quest.CreatorPrompt,
+                TikTokSearchTerms = quest.TikTokSearchTerms,
+                DurationMinutes = quest.DurationMinutes
+            });
+            savedQuestTitles.Add(quest.Title);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Couldn't add this side quest to your day plan: {ex.Message}";
+        }
+        finally
+        {
+            addingQuestTitle = null;
+        }
+    }
+
+    private static string BuildTikTokSearchUrl(GeneratedSideQuest quest) =>
+        $"https://www.tiktok.com/search?q={Uri.EscapeDataString(quest.TikTokSearchTerms)}";
 }
