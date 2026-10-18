@@ -1,10 +1,14 @@
 @page "/discover"
+@using HTV11.Components.Services
 @inject Supabase.Client SupabaseClient
+@inject AttractionRecommendationService AttractionRecommendationService
 
 <PageTitle>Discover</PageTitle>
 
 <div class="feature-page feature-discover">
-    <h1>Discover</h1>
+    <h1 class="feature-hero-title">
+        Find Your <span>Next Adventure</span>
+    </h1>
 
     @if (isLoading)
     {
@@ -22,12 +26,51 @@
             <a class="preferences-save" href="/preferences">Complete preferences</a>
         </section>
     }
+
+    <button type="button" class="preferences-save" @onclick="GenerateRecommendations" disabled="@isGenerating">
+        @(isGenerating ? "Generating..." : "Generate")
+    </button>
+
+    @if (recommendations is not null)
+    {
+        @if (recommendations.Count == 0)
+        {
+            <p>No recommendations were returned.</p>
+        }
+        else
+        {
+            <section class="discover-recommendations" aria-label="Recommendations">
+                @foreach (var recommendation in recommendations)
+                {
+                    <article class="discover-recommendation">
+                        <h2>@recommendation.Attraction.Name</h2>
+                        <p class="discover-recommendation-neighborhood">@recommendation.Attraction.Neighborhood</p>
+                        <p>@recommendation.Attraction.Summary</p>
+                        <p><strong>Why it may suit you:</strong> @recommendation.Attraction.WhyRecommended</p>
+                        <p><strong>Interests:</strong> @string.Join(", ", recommendation.Attraction.Interests)</p>
+                        <p><strong>Accessibility:</strong> @recommendation.Attraction.AccessibilityNotes</p>
+                        <p><strong>Age:</strong> @recommendation.Attraction.AgeNotes</p>
+                        <p><strong>Transit:</strong> @recommendation.Attraction.TransitNotes</p>
+                        <p class="discover-recommendation-callout discover-recommendation-consider">
+                            <strong>Things to consider:</strong> @recommendation.Attraction.PotentialDrawbacks
+                        </p>
+                        <p class="discover-recommendation-callout discover-recommendation-tip">
+                            <strong>Tip:</strong> @recommendation.Attraction.VisitorTips
+                        </p>
+                    </article>
+                }
+            </section>
+        }
+    }
 </div>
 
 @code {
     private bool isLoading = true;
     private bool hasCompletePreferences;
+    private bool isGenerating;
     private string? errorMessage;
+    private IReadOnlyList<AttractionRecommendation>? recommendations;
+    private HTV11.Models.Preferences? storedPreferences;
 
     protected override async Task OnInitializedAsync()
     {
@@ -45,15 +88,15 @@
                 .Where(row => row.Id == userId)
                 .Get();
 
-            var preferences = response.Models.FirstOrDefault();
-            hasCompletePreferences = preferences is not null
-                && !string.IsNullOrWhiteSpace(preferences.AgeGroup)
-                && !string.IsNullOrWhiteSpace(preferences.TravelMode)
-                && !string.IsNullOrWhiteSpace(preferences.VisitDuration)
-                && !string.IsNullOrWhiteSpace(preferences.BudgetPreference)
-                && !string.IsNullOrWhiteSpace(preferences.ActivityPace)
-                && !string.IsNullOrWhiteSpace(preferences.SettingPreference)
-                && preferences.Interests is { Count: > 0 };
+            storedPreferences = response.Models.FirstOrDefault() ?? new HTV11.Models.Preferences();
+            hasCompletePreferences = storedPreferences is not null
+                && !string.IsNullOrWhiteSpace(storedPreferences.AgeGroup)
+                && !string.IsNullOrWhiteSpace(storedPreferences.TravelMode)
+                && !string.IsNullOrWhiteSpace(storedPreferences.VisitDuration)
+                && !string.IsNullOrWhiteSpace(storedPreferences.BudgetPreference)
+                && !string.IsNullOrWhiteSpace(storedPreferences.ActivityPace)
+                && !string.IsNullOrWhiteSpace(storedPreferences.SettingPreference)
+                && storedPreferences.Interests is { Count: > 0 };
         }
         catch (Exception)
         {
@@ -62,6 +105,27 @@
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private async Task GenerateRecommendations()
+    {
+        isGenerating = true;
+        recommendations = null;
+        errorMessage = null;
+
+        try
+        {
+            var preferences = storedPreferences ?? new HTV11.Models.Preferences();
+            recommendations = await AttractionRecommendationService.RecommendAsync(preferences);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isGenerating = false;
         }
     }
 }
