@@ -1,0 +1,67 @@
+@page "/plan"
+@inject Supabase.Client SupabaseClient
+
+<PageTitle>Plan My Day</PageTitle>
+
+<div class="feature-page feature-plan">
+    <h1>Plan My Day</h1>
+
+    @if (isLoading)
+    {
+        <p>Checking your preferences…</p>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p class="discover-notice" role="alert">@errorMessage</p>
+    }
+    else if (!hasCompletePreferences)
+    {
+        <section class="discover-notice" role="status">
+            <h2>Complete your preferences first</h2>
+            <p>Choose your trip basics and at least one interest to plan a day that suits you.</p>
+            <a class="preferences-save" href="/preferences">Complete preferences</a>
+        </section>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private bool hasCompletePreferences;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Guid.TryParse(SupabaseClient.Auth.CurrentUser?.Id, out var userId))
+        {
+            errorMessage = "Sign in to plan your day.";
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            var response = await SupabaseClient
+                .From<HTV11.Models.Preferences>()
+                .Where(row => row.Id == userId)
+                .Get();
+
+            var preferences = response.Models.FirstOrDefault();
+            hasCompletePreferences = preferences is not null
+                && !string.IsNullOrWhiteSpace(preferences.AgeGroup)
+                && !string.IsNullOrWhiteSpace(preferences.TravelMode)
+                && !string.IsNullOrWhiteSpace(preferences.VisitDuration)
+                && !string.IsNullOrWhiteSpace(preferences.BudgetPreference)
+                && !string.IsNullOrWhiteSpace(preferences.ActivityPace)
+                && !string.IsNullOrWhiteSpace(preferences.SettingPreference)
+                && preferences.Interests is { Count: > 0 };
+        }
+        catch (Exception)
+        {
+            errorMessage = "Couldn't check your preferences. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

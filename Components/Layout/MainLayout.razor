@@ -1,3 +1,78 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
+@inject Supabase.Client SupabaseClient
+@inject NavigationManager Navigation
 
-@Body
+<div class="app-layout">
+    @if (ShowSidebar)
+    {
+        <aside class="app-sidebar @(isSidebarCollapsed ? "collapsed" : "")">
+            <div class="sidebar-header">
+                <h2><span class="sidebar-brand">Unseen Toronto</span></h2>
+                <button class="sidebar-toggle" type="button"
+                        @onclick="ToggleSidebar"
+                        aria-expanded="@(!isSidebarCollapsed)"
+                        aria-label="@(isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar")"
+                        title="@(isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar")">
+                    @(isSidebarCollapsed ? "›" : "‹")
+                </button>
+            </div>
+            <nav>
+                <NavLink href="/home" Match="NavLinkMatch.All">
+                    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" /></svg>
+                    <span class="nav-label">Home</span>
+                </NavLink>
+                <NavLink href="/preferences" Match="NavLinkMatch.All">
+                    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.6.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.6-.9l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.9l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.6-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.6.9l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.8z" /></svg>
+                    <span class="nav-label">Preferences</span>
+                </NavLink>
+                <NavLink href="/discover" Match="NavLinkMatch.All">
+                    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4M11 7v8m-4-4h8" /></svg>
+                    <span class="nav-label">Discover Places</span>
+                </NavLink>
+                <NavLink href="/sidequests" Match="NavLinkMatch.All">
+                    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l1 2.5 2.5 1-2.5 1L19 23l-1-2.5-2.5-1 2.5-1z" /></svg>
+                    <span class="nav-label">Side Quests</span>
+                </NavLink>
+                <NavLink href="/plan" Match="NavLinkMatch.All">
+                    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18m-13 4h2m4 0h2m-8 3h2" /></svg>
+                    <span class="nav-label">Plan My Day</span>
+                </NavLink>
+            </nav>
+            
+            
+        </aside>
+    }
+
+    <main class="app-content">
+        @Body
+    </main>
+</div>
+
+@code {
+    private bool isSidebarCollapsed;
+
+    private void ToggleSidebar() => isSidebarCollapsed = !isSidebarCollapsed;
+
+    private bool ShowSidebar =>
+        SupabaseClient.Auth.CurrentSession is not null &&
+        Navigation.ToBaseRelativePath(Navigation.Uri)
+            .Split('?')[0]
+            .Trim('/')
+            .ToLowerInvariant() is not ("login" or "signup" or "onboarding");
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += HandleLocationChanged;
+    }
+
+    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs args)
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= HandleLocationChanged;
+    }
+}
