@@ -59,7 +59,7 @@
         Navigation.ToBaseRelativePath(Navigation.Uri)
             .Split('?')[0]
             .Trim('/')
-            .ToLowerInvariant() is not ("login" or "signup" or "onboarding");
+            .ToLowerInvariant() is not ("login" or "signup");
 
     protected override void OnInitialized()
     {
