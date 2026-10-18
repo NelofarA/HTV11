@@ -1,0 +1,210 @@
+@page "/preferences"
+@inject Supabase.Client SupabaseClient
+
+<PageTitle>Preferences</PageTitle>
+
+<div class="feature-page feature-preferences">
+    <h1>Preferences</h1>
+    <p class="preferences-intro">Tell us what makes a trip feel right for you. You can change these any time.</p>
+
+    <EditForm Model="preferences" OnValidSubmit="SavePreferences" class="preferences-form">
+        <section class="preferences-section">
+            <h2>Trip basics</h2>
+            <div class="preferences-grid">
+                <div class="preference-field">
+                    <label for="age-group">Age group</label>
+                    <InputSelect id="age-group" @bind-Value="preferences.AgeGroup">
+                        <option value="">Choose an age group</option>
+                        <option>Adults only</option>
+                        <option>Traveling with children</option>
+                        <option>Teenagers</option>
+                        <option>Seniors</option>
+                    </InputSelect>
+                </div>
+                <div class="preference-field">
+                    <label for="travel-mode">How do you prefer to get around?</label>
+                    <InputSelect id="travel-mode" @bind-Value="preferences.TravelMode">
+                        <option value="">Choose a travel mode</option>
+                        <option>Walking</option>
+                        <option>Public transit</option>
+                        <option>Car</option>
+                        <option>Bicycle</option>
+                        <option>Mixed</option>
+                    </InputSelect>
+                </div>
+                <div class="preference-field">
+                    <label for="visit-duration">How long is your visit?</label>
+                    <InputSelect id="visit-duration" @bind-Value="preferences.VisitDuration">
+                        <option value="">Choose a duration</option>
+                        <option>1–3 days</option>
+                        <option>4–7 days</option>
+                        <option>1–2 weeks</option>
+                        <option>More than 2 weeks</option>
+                    </InputSelect>
+                </div>
+                <div class="preference-field">
+                    <label for="budget">What's your budget?</label>
+                    <InputSelect id="budget" @bind-Value="preferences.BudgetPreference">
+                        <option value="">Choose a budget</option>
+                        <option>Budget-friendly</option>
+                        <option>Mid-range</option>
+                        <option>Comfortable</option>
+                        <option>Luxury</option>
+                    </InputSelect>
+                </div>
+                <div class="preference-field">
+                    <label for="pace">What pace suits you?</label>
+                    <InputSelect id="pace" @bind-Value="preferences.ActivityPace">
+                        <option value="">Choose a pace</option>
+                        <option>Relaxed</option>
+                        <option>Balanced</option>
+                        <option>Active</option>
+                    </InputSelect>
+                </div>
+                <div class="preference-field">
+                    <label for="setting">What kind of setting do you enjoy?</label>
+                    <InputSelect id="setting" @bind-Value="preferences.SettingPreference">
+                        <option value="">Choose a setting</option>
+                        <option>City</option>
+                        <option>Coastal</option>
+                        <option>Mountains</option>
+                        <option>Countryside</option>
+                        <option>Any</option>
+                    </InputSelect>
+                </div>
+                <div class="preference-field">
+                    <label for="start-date">Visit start date</label>
+                    <InputDate id="start-date" @bind-Value="preferences.VisitDateStart" />
+                </div>
+                <div class="preference-field">
+                    <label for="end-date">Visit end date</label>
+                    <InputDate id="end-date" @bind-Value="preferences.VisitDateEnd" />
+                </div>
+            </div>
+        </section>
+
+        <section class="preferences-section">
+            <h2>What are you interested in?</h2>
+            <div class="preference-options">
+                @foreach (var interest in interestOptions)
+                {
+                    <label class="preference-option">
+                        <input type="checkbox" checked="@preferences.Interests.Contains(interest)" @onchange="args => ToggleSelection(preferences.Interests, interest, args)" />
+                        <span>@interest</span>
+                    </label>
+                }
+            </div>
+        </section>
+
+        <section class="preferences-section">
+            <h2>Accessibility needs</h2>
+            <div class="preference-options">
+                @foreach (var need in accessibilityOptions)
+                {
+                    <label class="preference-option">
+                        <input type="checkbox" checked="@preferences.AccessibilityNeeds.Contains(need)" @onchange="args => ToggleSelection(preferences.AccessibilityNeeds, need, args)" />
+                        <span>@need</span>
+                    </label>
+                }
+            </div>
+        </section>
+
+        <button type="submit" class="preferences-save">Save preferences</button>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <p class="preferences-saved" role="alert">@errorMessage</p>
+        }
+        @if (saved)
+        {
+            <p class="preferences-saved" role="status">Preferences saved to your account.</p>
+        }
+    </EditForm>
+</div>
+
+@code {
+    private readonly HTV11.Models.Preferences preferences = new();
+    private readonly string[] interestOptions = [
+        "Art & museums", "Architecture", "Food & drink", "History",
+        "Markets & shopping", "Parks & nature", "Science & technology", "Local culture"
+    ];
+    private readonly string[] accessibilityOptions = [
+        "Wheelchair access", "Step-free routes", "Accessible restrooms",
+        "Sensory-friendly", "Stroller-friendly"
+    ];
+    private bool saved;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUserId = SupabaseClient.Auth.CurrentUser?.Id;
+        if (!Guid.TryParse(currentUserId, out var userId))
+        {
+            errorMessage = "Sign in to load and save your preferences.";
+            return;
+        }
+
+        preferences.Id = userId;
+        try
+        {
+            var response = await SupabaseClient
+                .From<HTV11.Models.Preferences>()
+                .Where(row => row.Id == userId)
+                .Get();
+
+            var storedPreferences = response.Models.FirstOrDefault();
+            if (storedPreferences is not null)
+            {
+                preferences.Interests = storedPreferences.Interests ?? [];
+                preferences.AgeGroup = storedPreferences.AgeGroup;
+                preferences.AccessibilityNeeds = storedPreferences.AccessibilityNeeds ?? [];
+                preferences.TravelMode = storedPreferences.TravelMode;
+                preferences.BudgetPreference = storedPreferences.BudgetPreference;
+                preferences.VisitDuration = storedPreferences.VisitDuration;
+                preferences.VisitDateStart = storedPreferences.VisitDateStart;
+                preferences.VisitDateEnd = storedPreferences.VisitDateEnd;
+                preferences.SettingPreference = storedPreferences.SettingPreference;
+                preferences.ActivityPace = storedPreferences.ActivityPace;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Couldn't load preferences: {ex.Message}";
+        }
+    }
+
+    private static void ToggleSelection(List<string> selections, string option, ChangeEventArgs args)
+    {
+        if (Convert.ToBoolean(args.Value))
+        {
+            if (!selections.Contains(option)) selections.Add(option);
+        }
+        else
+        {
+            selections.Remove(option);
+        }
+    }
+
+    private async Task SavePreferences()
+    {
+        errorMessage = null;
+        saved = false;
+
+        if (SupabaseClient.Auth.CurrentUser?.Id is not string currentUserId ||
+            !Guid.TryParse(currentUserId, out var userId))
+        {
+            errorMessage = "Sign in to save your preferences.";
+            return;
+        }
+
+        preferences.Id = userId;
+        try
+        {
+            await SupabaseClient.From<HTV11.Models.Preferences>().Upsert(preferences);
+            saved = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Couldn't save preferences: {ex.Message}";
+        }
+    }
+}
