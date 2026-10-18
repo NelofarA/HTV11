@@ -38,7 +38,7 @@ public sealed class AttractionRecommendationException(string message) : Exceptio
     HttpClient httpClient,
     IConfiguration configuration)
 {
-    private const string DefaultModel = "gemini-3.8-flash";
+    private const string DefaultModel = "gemini-3.5-flash-lite";
     private const int RecommendationCount = 6;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
