@@ -15,7 +15,7 @@ button, input, select, textarea {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(ellipse 95% 90% at 100% 0%, rgba(255, 105, 55, .52), rgba(255, 55, 130, .3) 48%, transparent 78%), radial-gradient(ellipse 75% 80% at 0% 100%, rgba(90, 75, 190, .38), transparent 76%),
+    background: radial-gradient(ellipse 95% 90% at 100% 0%, rgba(245, 98, 51, .52), rgba(255, 55, 130, .3) 48%, transparent 78%), radial-gradient(ellipse 75% 80% at 0% 100%, rgba(90, 75, 190, .38), transparent 76%),
         linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px) 0 0/36px 36px,
         linear-gradient(90deg, rgba(255, 255, 255, .025) 1px, transparent 1px) 0 0/36px 36px, #0a0705;
     color: white;
@@ -37,7 +37,7 @@ button, input, select, textarea {
     display: flex;
     --glow-one: 100% 0%;
     --glow-two: 0% 100%;
-    background: radial-gradient(ellipse 95% 90% at var(--glow-one), rgba(255, 105, 55, .52), rgba(255, 55, 130, .3) 48%, transparent 78%), radial-gradient(ellipse 75% 80% at var(--glow-two), rgba(90, 75, 190, .38), transparent 76%),
+    background: radial-gradient(ellipse 95% 90% at var(--glow-one), rgba(245, 98, 51, .52), rgba(255, 55, 130, .3) 48%, transparent 78%), radial-gradient(ellipse 75% 80% at var(--glow-two), rgba(90, 75, 190, .38), transparent 76%),
         linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px) 0 0/36px 36px,
         linear-gradient(90deg, rgba(255, 255, 255, .025) 1px, transparent 1px) 0 0/36px 36px, #0a0705;
 }
@@ -114,13 +114,13 @@ button, input, select, textarea {
 
 .app-sidebar a.active,
 .app-sidebar a:hover {
-    border-left-color: #ff875b;
+    border-left-color: #f27c52;
     background: #28201e;
     color: white;
 }
 
 .app-sidebar a.active .nav-icon {
-    color: #ff9b73;
+    color: #f28b65;
 }
 
 .app-sidebar.collapsed {
@@ -224,7 +224,7 @@ button, input, select, textarea {
 .feature-page {
     min-height: 100vh;
     padding: 3rem;
-    background: radial-gradient(ellipse 95% 90% at var(--glow-one, 100% 0%), rgba(255, 105, 55, .52), rgba(255, 55, 130, .3) 48%, transparent 78%), radial-gradient(ellipse 75% 80% at var(--glow-two, 0% 100%), rgba(90, 75, 190, .38), transparent 76%),
+    background: radial-gradient(ellipse 95% 90% at var(--glow-one, 100% 0%), rgba(245, 98, 51, .52), rgba(255, 55, 130, .3) 48%, transparent 78%), radial-gradient(ellipse 75% 80% at var(--glow-two, 0% 100%), rgba(90, 75, 190, .38), transparent 76%),
         linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px) 0 0/36px 36px,
         linear-gradient(90deg, rgba(255, 255, 255, .025) 1px, transparent 1px) 0 0/36px 36px, #0a0705;
     color: white;
@@ -331,16 +331,32 @@ button, input, select, textarea {
     height: 1rem;
     flex: 0 0 auto;
     margin: 0;
-    accent-color: #d96e4b;
+    accent-color: #cf6544;
 }
 
 .preferences-save {
     padding: .75rem 1.1rem;
     border: 0;
     border-radius: 6px;
-    background: #d96e4b;
+    background: #cf6544;
     color: white;
     cursor: pointer;
+}
+
+.feature-preferences .preferences-save {
+    background: #c35c3d;
+}
+
+.feature-preferences .preference-option input[type="checkbox"] {
+    accent-color: #c35c3d;
+}
+
+.feature-preferences .preference-field input:focus,
+.feature-preferences .preference-field select:focus,
+.feature-preferences .preference-field textarea:focus {
+    border-color: #c35c3d;
+    outline-color: #c35c3d;
+    box-shadow: 0 0 0 .15rem rgba(195, 92, 61, .22);
 }
 
 .preferences-saved {
@@ -358,6 +374,21 @@ button, input, select, textarea {
     background: rgba(10, 7, 5, .72);
 }
 
+.feature-hero-title {
+    max-width: 900px;
+    margin: 1.5rem 0 2rem;
+    color: #fff1e8;
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    font-weight: 800;
+    letter-spacing: -.04em;
+    line-height: 1.05;
+    text-wrap: balance;
+}
+
+.feature-hero-title span {
+    color: #f28b65;
+}
+
 .discover-notice h2 {
     margin: 0 0 .75rem;
     font-size: 1.2rem;
@@ -371,6 +402,85 @@ button, input, select, textarea {
 .discover-notice .preferences-save {
     display: inline-block;
     text-decoration: none;
+}
+
+.discover-recommendations {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.discover-recommendation {
+    padding: 1.25rem;
+    border: 1px solid rgba(242, 139, 101, .24);
+    border-left: 3px solid #f28b65;
+    border-radius: 10px;
+    background: rgba(23, 16, 13, .82);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+    transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.discover-recommendation:hover {
+    border-color: rgba(242, 139, 101, .5);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
+}
+
+.discover-recommendation h2 {
+    margin: 0 0 .25rem;
+    font-size: 1.2rem;
+    color: #fff1e8;
+}
+
+.discover-recommendation p {
+    margin: .65rem 0 0;
+    color: #e1dada;
+    line-height: 1.55;
+}
+
+.discover-recommendation strong {
+    color: #f2a184;
+    font-weight: 600;
+}
+
+.discover-recommendation .discover-recommendation-neighborhood {
+    margin-top: 0;
+    color: #c8c2c2;
+    font-size: .9rem;
+    letter-spacing: .02em;
+}
+
+.discover-recommendation .discover-recommendation-callout {
+    padding: .7rem .85rem;
+    border-radius: 6px;
+}
+
+.discover-recommendation .discover-recommendation-consider {
+    border-left: 2px solid #e7a66e;
+    background: rgba(231, 166, 110, .1);
+}
+
+.discover-recommendation .discover-recommendation-consider strong {
+    color: #f0b984;
+}
+
+.discover-recommendation .discover-recommendation-tip {
+    border-left: 2px solid #83b9a8;
+    background: rgba(131, 185, 168, .1);
+}
+
+.discover-recommendation .discover-recommendation-tip strong {
+    color: #a5d3c3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .discover-recommendation {
+        transition: none;
+    }
+
+    .discover-recommendation:hover {
+        transform: none;
+    }
 }
 
 @media (max-width: 600px) {
